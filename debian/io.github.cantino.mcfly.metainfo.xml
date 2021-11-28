@@ -1,0 +1,24 @@
+  <name>McFly</name>
+  <summary>smart ctrl-r shell history replace</summary>
+  
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  
+  <description>
+    <p>
+      McFly replaces your default ctrl-r shell history search with an intelligent search engine that takes into account your working directory and the context of recently executed commands. McFly&apos;s suggestions are prioritized in real time with a small neural network.
+    </p>
+  </description>
+  
+  <icon type="stock">mcfly</icon>
+  
+  <categories>
+    <category>Utility</category>
+    <category>Adult</category>
+  </categories>
+  
+  <provides>
+    <binary>mcfly</binary>
+  </provides>
+</component>
+

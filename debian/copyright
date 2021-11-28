@@ -1,0 +1,74 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: mcfly
+Source: <url://example.com>
+#
+# Please double check copyright with the licensecheck(1) command.
+
+Files:     .gitignore
+           .travis.yml
+           CHANGELOG.txt
+           Cargo.lock
+           Cargo.toml
+           README.md
+           ci/before_deploy.sh
+           ci/install.sh
+           ci/script.sh
+           dev.bash
+           dev.fish
+           dev.zsh
+           docs/iterm2.jpeg
+           docs/screenshot.png
+           mcfly.bash
+           mcfly.fish
+           mcfly.zsh
+           pkg/brew/mcfly.rb
+           src/command_input.rs
+           src/fake_typer.rs
+           src/fixed_length_grapheme_string.rs
+           src/history/db_extensions.rs
+           src/history/history.rs
+           src/history/mod.rs
+           src/history/schema.rs
+           src/history_cleaner.rs
+           src/interface.rs
+           src/lib.rs
+           src/main.rs
+           src/network.rs
+           src/node.rs
+           src/path_update_helpers.rs
+           src/settings.rs
+           src/shell_history.rs
+           src/simplified_command.rs
+           src/trainer.rs
+           src/training_cache.rs
+           src/training_sample_generator.rs
+Copyright: __NO_COPYRIGHT_NOR_LICENSE__
+License:   __NO_COPYRIGHT_NOR_LICENSE__
+
+#----------------------------------------------------------------------------
+# Files marked as NO_LICENSE_TEXT_FOUND may be covered by the following
+# license/copyright files.
+
+#----------------------------------------------------------------------------
+# License file: LICENSE
+ The MIT License
+ .
+ Copyright (c) 2018, Andrew Cantino
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.

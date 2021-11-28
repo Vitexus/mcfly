@@ -1,0 +1,17 @@
+Source: mcfly
+Section: devel
+Priority: optional
+Maintainer: CyberVitexus <info@vitexsoftware.cz>
+Build-Depends: debhelper (>=11~),rustc (>=1.40),cargo,dh-cargo
+Standards-Version: 4.1.4
+Homepage: https://github.com/cantino/mcfly
+
+Package: mcfly
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: smart ctrl-r shell history replace
+ McFly replaces your default ctrl-r shell history search with an intelligent 
+ search engine that takes into account your working directory and the context 
+ of recently executed commands. McFly&apos;s suggestions are prioritized in 
+ real time with a small neural network.

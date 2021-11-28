@@ -1,0 +1,7 @@
+target/release/mcfly usr/bin
+mcfly.bash	    usr/share/mcfly
+mcfly.fish	    usr/share/mcfly
+mcfly.zsh	    usr/share/mcfly
+debian/mcfly.svg    usr/share/icons/hicolor/scalable/apps/
+debian/mcfly.sh     etc/profile.d
+debian/io.github.cantino.mcfly.metainfo.xml /usr/share/metainfo
