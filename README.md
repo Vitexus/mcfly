@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cantino/mcfly.svg?branch=master)](https://travis-ci.org/cantino/mcfly)
+![Build Status](https://github.com/cantino/mcfly/actions/workflows/mean_bean_ci.yml/badge.svg)
 [![](https://img.shields.io/crates/v/mcfly.svg)](https://crates.io/crates/mcfly)
 
 # McFly - fly through your shell history
@@ -186,6 +186,17 @@ When suggesting a command, McFly takes into consideration:
     ```
 1. Run `. ~/.bashrc` / `. ~/.zshrc` / `source ~/.config/fish/config.fish` or restart your terminal emulator.
 
+### Install by [Zinit](https://github.com/zdharma-continuum/zinit)
+
+* Add below code to your zshrc.
+
+    ```zsh
+    zinit ice lucid wait"0a" from"gh-r" as"program" atload'eval "$(mcfly init zsh)"' 
+    zinit light cantino/mcfly 
+    ```
+* It will download mcfly and install for you.
+* `$(mcfly init zsh)` will be executed after prompt
+
 ## iTerm2
 
 To avoid McFly's UI messing up your scrollback history in iTerm2, make sure this option is unchecked:
@@ -207,6 +218,16 @@ fish:
 ```bash
 set -gx MCFLY_LIGHT TRUE
 ```
+
+Tip: on macOS you can use the following snippet for color scheme to be configured based on system-wide settings:
+
+bash / zsh:
+```bash
+if [[ "$(defaults read -g AppleInterfaceStyle 2&>/dev/null)" != "Dark" ]]; then
+    export MCFLY_LIGHT=TRUE
+fi
+```
+
 
 ### VIM Key Scheme
 By default Mcfly uses an `emacs` inspired key scheme. If you would like to switch to the `vim` inspired key scheme, set the environment variable `MCFLY_KEY_SCHEME`.
@@ -259,6 +280,19 @@ export MCFLY_INTERFACE_VIEW=BOTTOM
 fish:
 ```bash
 set -gx MCFLY_INTERFACE_VIEW BOTTOM
+```
+
+### Disable menu interface
+To disable the menu interface, set the environment variable `MCFLY_DISABLE_MENU`.
+
+bash / zsh:
+```bash
+export MCFLY_DISABLE_MENU=TRUE
+```
+
+fish:
+```bash
+set -gx MCFLY_DISABLE_MENU TRUE
 ```
 
 ### Results sorting
