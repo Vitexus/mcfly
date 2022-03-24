@@ -757,17 +757,17 @@ impl History {
         let commands =
             shell_history::full_history(&shell_history::history_file_path(), history_format);
 
-        // Make ~/.mcfly
-        fs::create_dir_all(Settings::storage_dir_path())
-            .unwrap_or_else(|_| panic!("Unable to create {:?}", Settings::storage_dir_path()));
+        // Use ~/.mcfly if it already exists, or create 'mcfly' folder in XDG_DATA_DIR
+        let mcfly_db_path = Settings::mcfly_db_path();
+        let mcfly_db_dir = mcfly_db_path.parent().unwrap();
+
+        fs::create_dir_all(mcfly_db_dir)
+            .unwrap_or_else(|_| panic!("Unable to create {:?}", mcfly_db_dir));
 
         // Make ~/.mcfly/history.db
-        let mut connection = Connection::open(Settings::mcfly_db_path()).unwrap_or_else(|_| {
-            panic!(
-                "Unable to create history DB at {:?}",
-                Settings::mcfly_db_path()
-            )
-        });
+        let mut connection = Connection::open(&mcfly_db_path)
+            .unwrap_or_else(|_| panic!("Unable to create history DB at {:?}", &mcfly_db_path));
+
         db_extensions::add_db_functions(&connection);
 
         connection.execute_batch(
@@ -806,16 +806,19 @@ impl History {
                 if !IGNORED_COMMANDS.contains(&command.command.as_str()) {
                     let simplified_command = SimplifiedCommand::new(&command.command, true);
                     if !command.command.is_empty() && !simplified_command.result.is_empty() {
-                        statement
-                            .execute_named(&[
-                                (":cmd", &command.command),
-                                (":cmd_tpl", &simplified_command.result.to_owned()),
-                                (":session_id", &"IMPORTED"),
-                                (":when_run", &command.when),
-                                (":exit_code", &0),
-                                (":selected", &0),
-                            ])
-                            .unwrap_or_else(|err| panic!("McFly error: Insert to work ({})", err));
+                        if let Err(e) = statement.execute_named(&[
+                            (":cmd", &command.command),
+                            (":cmd_tpl", &simplified_command.result.to_owned()),
+                            (":session_id", &"IMPORTED"),
+                            (":when_run", &command.when),
+                            (":exit_code", &0),
+                            (":selected", &0),
+                        ]) {
+                            println!(
+                                "A single history line could not be saved due to '{}' (command was '{}'), but other inserts should be fine.",
+                                e, &command.command
+                            );
+                        }
                     }
                 }
             }
