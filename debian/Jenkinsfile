@@ -64,7 +64,7 @@ architectures.each {
                 }
                 stage('Build ' + architecture + ' ' + distribution) {
                     buildImage.inside {
-                        sh 'sudo rustup default stable-2022-05-19'
+                        sh 'curl https://sh.rustup.rs -sSf | RUSTUP_INIT_SKIP_PATH_CHECK=1 sh -s -- -y'
                         sh 'dch -b -v ' + ver  + ' "' + env.BUILD_TAG  + '"'
                         sh 'sudo apt-get update --allow-releaseinfo-change'
                         sh 'sudo chown jenkins:jenkins ..'
