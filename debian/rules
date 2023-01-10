@@ -10,5 +10,6 @@ export DH_VERBOSE = 1
 
 
 override_dh_prep:
+	which cargo
 	cargo install --path .
 	dh_prep
