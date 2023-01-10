@@ -5,14 +5,11 @@ export DH_VERBOSE = 1
 #export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-export PATH="$HOME/.cargo/bin:$PATH"
-
-
 %:
 	dh $@
 
 
 override_dh_prep:
 	which cargo
-	cargo install --path .
+	~/.cargo/bin/cargo install --path .
 	dh_prep
