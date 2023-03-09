@@ -1,6 +1,6 @@
 #!groovy
 
-String[] architectures = []
+String[] architectures = ['amd64','aarch64']
 String[] distributions = ['debian:buster', 'debian:bullseye', 'debian:bookworm', 'ubuntu:focal', 'ubuntu:jammy']
 
 String vendor = 'vitexsoftware'
@@ -17,6 +17,7 @@ node() {
     ansiColor('xterm') {
         stage('SCM Checkout') {
             checkout scm
+            sh 'debian/upver.sh'
             def control = readFile(file:  env.WORKSPACE + '/debian/control')
             def lines = control.readLines()
             for (line in lines) {
