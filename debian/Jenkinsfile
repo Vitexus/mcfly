@@ -17,7 +17,6 @@ node() {
     ansiColor('xterm') {
         stage('SCM Checkout') {
             checkout scm
-            sh 'debian/upver.sh'
             def control = readFile(file:  env.WORKSPACE + '/debian/control')
             def lines = control.readLines()
             for (line in lines) {
@@ -57,6 +56,7 @@ architectures.each {
                 stage('Checkout ' + architecture + ' ' + distribution) {
                     buildImage = docker.image(vendor + '/' + distribution)
                     sh 'git checkout debian/changelog'
+                    sh 'debian/upver.sh'
                     def VERSION = sh(
                         script: 'dpkg-parsechangelog --show-field Version',
                         returnStdout: true
@@ -65,7 +65,11 @@ architectures.each {
                 }
                 stage('Build ' + architecture + ' ' + distribution) {
                     buildImage.inside {
+                        sh 'curl https://sh.rustup.rs -sSf | RUSTUP_INIT_SKIP_PATH_CHECK=1 sh -s -- -y'
                         sh 'dch -b -v ' + ver  + ' "' + env.BUILD_TAG  + '"'
+                        sh 'sudo apt-get update --allow-releaseinfo-change'
+                        sh 'sudo chown jenkins:jenkins ..'
+                        sh 'PATH="$HOME/.cargo/bin:$PATH" debuild-pbuilder  -i -us -uc -b'                        
                         sh 'sudo apt-get update --allow-releaseinfo-change'
                         sh 'sudo chown jenkins:jenkins ..'
                         sh 'debuild-pbuilder  -i -us -uc -b'
