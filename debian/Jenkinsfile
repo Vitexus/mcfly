@@ -53,7 +53,10 @@ architectures.each {
 
         node(architecture) {
             ansiColor('xterm') {
-                stage('Checkout ' + architecture + ' ' + distribution) {
+                stage('Git checkout' + architecture + ' ' + distribution ) {
+                    checkout scm
+                }
+                stage('Set version for ' + architecture + ' ' + distribution) {
                     buildImage = docker.image(vendor + '/' + distribution)
                     sh 'git checkout debian/changelog'
                     sh 'debian/upver.sh'
