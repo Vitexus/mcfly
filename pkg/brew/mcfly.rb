@@ -7,16 +7,16 @@
 #   brew untap cantino/mcfly
 
 class Mcfly < Formula
-  version 'v0.8.1'
+  version 'v0.8.4'
   desc "McFly"
   homepage "https://github.com/cantino/mcfly"
 
   if OS.mac?
     url "https://github.com/cantino/mcfly/releases/download/#{version}/mcfly-#{version}-x86_64-apple-darwin.tar.gz"
-    sha256 "db8d125c040fa9f97ba9b7777d1109ff2598db386f42e79e24aef66556500c11"
+    sha256 "2960fc6ee25d358133b2c97b0098d825faf0683799fa99ef4b0fdc7f4797c3db"
   elsif OS.linux?
     url "https://github.com/cantino/mcfly/releases/download/#{version}/mcfly-#{version}-x86_64-unknown-linux-musl.tar.gz"
-    sha256 "31231a4085f73eef41ab222e08518b7912cce55e7c1396931818a0fbfacf4fef"
+    sha256 "aaa17c9b5f112ea5e46be18c016aeaf123b139443685e00f45beed3388db0ec7"
   end
 
   def install
@@ -25,20 +25,12 @@ class Mcfly < Formula
 
   def caveats
     <<~EOS
-      ONE MORE STEP!
+      DEPRECATED! mcfly is now in the core homebrew repository and you don't need this tap.
+      Please run:
 
-      Add the following to the end of your ~/.bashrc, ~/.zshrc, or ~/.config/fish/config.fish file.
-
-      Bash:
-        eval "$(mcfly init bash)"
-
-      Zsh:
-        eval "$(mcfly init zsh)"
-
-      Fish:
-        mcfly init fish | source
-
-      You will need to restart your terminal when first installing and on some updates. If you receive a McFly error when running commands, try restarting your terminal.
+      brew uninstall mcfly
+      brew untap cantino/mcfly
+      brew install mcfly
     EOS
   end
 end
