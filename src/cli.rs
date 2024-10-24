@@ -13,11 +13,11 @@ pub struct Cli {
     #[arg(short, long)]
     pub debug: bool,
 
-    /// Session ID to record or search under (defaults to $MCFLY_SESSION_ID)
+    /// Session ID to record or search under (defaults to $`MCFLY_SESSION_ID`)
     #[arg(long = "session_id")]
     pub session_id: Option<String>,
 
-    /// Shell history file to read from when adding or searching (defaults to $MCFLY_HISTORY)
+    /// Shell history file to read from when adding or searching (defaults to $`MCFLY_HISTORY`)
     #[arg(long = "mcfly_history")]
     pub mcfly_history: Option<PathBuf>,
 
@@ -36,14 +36,14 @@ pub enum SubCommand {
     /// Add commands to the history
     #[command(alias = "a")]
     Add {
-        /// The command that was run (default last line of $MCFLY_HISTORY file)
+        /// The command that was run (default last line of $`MCFLY_HISTORY` file)
         command: Vec<String>,
 
         /// Exit code of command
         #[arg(value_name = "EXIT_CODE", short, long)]
         exit: Option<i32>,
 
-        /// Also append command to the given file (e.q., .bash_history)
+        /// Also append command to the given file (e.q., .`bash_history`)
         #[arg(value_name = "HISTFILE", short, long)]
         append_to_histfile: Option<String>,
 
@@ -139,6 +139,53 @@ pub enum SubCommand {
         #[arg(long, short, value_enum, default_value_t)]
         format: DumpFormat,
     },
+
+    /// Prints stats
+    Stats {
+        /// The minimum command length to be listed in the "top-n" commands
+        #[arg(
+            value_name = "MIN_CMD_LENGTH",
+            short,
+            long,
+            value_name = "min_cmd_length",
+            default_value_t = 0
+        )]
+        min_cmd_length: i16,
+
+        /// The number of "top-n" commands
+        #[arg(
+            value_name = "CMDS",
+            short,
+            long,
+            value_name = "cmds",
+            default_value_t = 10
+        )]
+        cmds: i16,
+
+        /// Break down by top directories - defaults to 0, which doesn't limit by directory
+        #[arg(
+            value_name = "DIRS",
+            short,
+            long,
+            value_name = "dirs",
+            default_value_t = 0
+        )]
+        dirs: i16,
+
+        // Skip the top n commands when breaking down by directory
+        #[arg(
+            value_name = "GLOBAL_CMDS_TO_IGNORE",
+            short,
+            long,
+            value_name = "global_cmds_to_ignore",
+            default_value_t = 10
+        )]
+        global_commands_to_ignore: i16,
+
+        /// Only show commands from a given directory
+        #[arg(value_name = "ONLY_DIR", short, long)]
+        only_dir: Option<String>,
+    },
 }
 
 #[derive(Clone, Copy, ValueEnum, Default)]
@@ -176,6 +223,7 @@ pub enum DumpFormat {
 }
 
 impl Cli {
+    #[must_use]
     pub fn is_init(&self) -> bool {
         matches!(self.command, SubCommand::Init { .. })
     }
@@ -183,6 +231,7 @@ impl Cli {
 
 impl SortOrder {
     #[inline]
+    #[must_use]
     pub fn to_str(&self) -> &'static str {
         match self {
             Self::Asc => "ASC",

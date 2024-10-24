@@ -1,3 +1,7 @@
+use std::fs;
+use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use mcfly::dumper::Dumper;
 use mcfly::fake_typer;
 use mcfly::history::History;
@@ -6,10 +10,8 @@ use mcfly::interface::Interface;
 use mcfly::settings::Mode;
 use mcfly::settings::Settings;
 use mcfly::shell_history;
+use mcfly::stats_generator::StatsGenerator;
 use mcfly::trainer::Trainer;
-use std::fs;
-use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 fn handle_addition(settings: &Settings) {
     let history = History::load(settings.history_format);
@@ -30,12 +32,12 @@ fn handle_addition(settings: &Settings) {
                 settings.when_run.unwrap_or(
                     SystemTime::now()
                         .duration_since(UNIX_EPOCH)
-                        .unwrap_or_else(|err| panic!("McFly error: Time went backwards ({})", err))
+                        .unwrap_or_else(|err| panic!("McFly error: Time went backwards ({err})"))
                         .as_secs() as i64,
                 ),
                 settings.history_format,
             );
-            shell_history::append_history_entry(&command, &histfile, settings.debug)
+            shell_history::append_history_entry(&command, &histfile, settings.debug);
         }
     }
 }
@@ -70,7 +72,7 @@ fn handle_search(settings: &Settings) {
             }
 
             fs::write(path, &out)
-                .unwrap_or_else(|err| panic!("McFly error: unable to write to {}: {}", path, err));
+                .unwrap_or_else(|err| panic!("McFly error: unable to write to {path}: {err}"));
         } else {
             fake_typer::use_tiocsti(&cmd);
 
@@ -100,8 +102,16 @@ fn handle_dump(settings: &Settings) {
     Dumper::new(settings, &history).dump();
 }
 
+fn handle_stats(settings: &Settings) {
+    let history = History::load(settings.history_format);
+    let stats = StatsGenerator::new(&history).generate_stats(settings);
+    println!("{stats}");
+}
+
 fn main() {
-    let settings = Settings::parse_args();
+    let mut settings = Settings::parse_args();
+
+    settings.load_config();
 
     match settings.mode {
         Mode::Add => {
@@ -122,5 +132,6 @@ fn main() {
         Mode::Dump => {
             handle_dump(&settings);
         }
+        Mode::Stats => handle_stats(&settings),
     }
 }

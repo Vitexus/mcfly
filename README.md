@@ -41,7 +41,7 @@ When suggesting a command, McFly takes into consideration:
 
 ## Installation
 
-### Install with Homebrew (on OS X or Linux)
+### Install with Homebrew (on macOS or Linux)
 
 1. Install `mcfly`:
     ```bash
@@ -73,7 +73,7 @@ When suggesting a command, McFly takes into consideration:
     ```
 1. Remove the lines you added to `~/.bashrc` / `~/.zshrc` / `~/.config/fish/config.fish`.
 
-### Install with MacPorts (on OS X)
+### Install with MacPorts (on macOS)
 
 1. Update the ports tree
     ```bash
@@ -109,7 +109,7 @@ When suggesting a command, McFly takes into consideration:
     ```
 1. Remove the lines you added to `~/.bashrc` / `~/.zshrc` / `~/.config/fish/config.fish`.
 
-### Installing using our install script
+### Installing using our install script (macOS or Linux)
 
 1. `curl -LSfs https://raw.githubusercontent.com/cantino/mcfly/master/ci/install.sh | sh -s -- --git cantino/mcfly` (or, if the current user doesn't have permissions to edit /usr/local/bin, then use `sudo sh -s`.)
 
@@ -128,18 +128,17 @@ When suggesting a command, McFly takes into consideration:
    ```
 
    Fish:
-
    ```bash
    mcfly init fish | source
    ```
 
 3. Run `. ~/.bashrc` / `. ~/.zshrc` / `source ~/.config/fish/config.fish` or restart your terminal emulator.
 
-### Installing manually from GitHub
+### Installing manually from GitHub (macOS or Linux)
 
 1. Download the [latest release from GitHub](https://github.com/cantino/mcfly/releases).
 1. Install to a location in your `$PATH`. (For example, you could create a directory at `~/bin`, copy `mcfly` to this location, and add `export PATH="$PATH:$HOME/bin"` to your `.bashrc` / `.zshrc`, or run `set -Ua fish_user_paths "$HOME/bin"` for fish.)
-1. Add the following to the end of your `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish` file, respectively:
+1. Add the following to the end of your `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`, respectively:
 
    Bash:
     ```bash
@@ -155,15 +154,16 @@ When suggesting a command, McFly takes into consideration:
     ```bash
     mcfly init fish | source
     ```
+
 1. Run `. ~/.bashrc` / `. ~/.zshrc` / `source ~/.config/fish/config.fish` or restart your terminal emulator.
 
-### Install manually from source
+### Install manually from source (macOS, Linux, or Windows)
 
 1. [Install Rust 1.40 or later](https://www.rust-lang.org/tools/install)
 1. Run `git clone https://github.com/cantino/mcfly` and `cd mcfly`
 1. Run `cargo install --path .`
 1. Ensure `~/.cargo/bin` is in your `$PATH`.
-1. Add the following to the end of your `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish` file, respectively:
+1. Add the following to the end of your `~/.bashrc`, `~/.zshrc`, `~/.config/fish/config.fish`, or powershell `$PROFILE`, respectively:
 
    Bash:
     ```bash
@@ -179,7 +179,13 @@ When suggesting a command, McFly takes into consideration:
     ```bash
     mcfly init fish | source
     ```
-1. Run `. ~/.bashrc` / `. ~/.zshrc` / `source ~/.config/fish/config.fish` or restart your terminal emulator.
+
+    Powershell Core (pwsh)
+    ```powershell
+    Invoke-Expression -Command $(mcfly init powershell | out-string)
+    ```
+
+1. Run `. ~/.bashrc` / `. ~/.zshrc` / `source ~/.config/fish/config.fish` / `. $PROFILE` or restart your terminal emulator.
 
 ### Install by [Zinit](https://github.com/zdharma-continuum/zinit)
 
@@ -219,19 +225,16 @@ mcfly dump
 ```
 
 ### Timestamp format
-McFly use [chrono-systemd-time-ng] parsing timestamp.
 
-**chrono-systemd-time-ng** is a non-strict implementation of [systemd.time](https://www.freedesktop.org/software/systemd/man/systemd.time.html), with the following exceptions:
+McFly parses timestamps via `chrono-systemd-time`, a non-strict implementation of [systemd.time](https://www.freedesktop.org/software/systemd/man/systemd.time.html), with the following exceptions:
 * time units **must** accompany all time span values.
 * time zone suffixes are **not** supported.
 * weekday prefixes are **not** supported.
 
-Users of McFly simply need to understand **specifying timezone in timestamp isn't allowed**.
+McFly users simply need to understand **specifying timezone in timestamp isn't allowed**.
 McFly will always use your **local timezone**.
 
-For more details, please refer to [the document of chrono-systemd-time-ng][chrono-systemd-time-ng].
-
-[chrono-systemd-time-ng]: https://docs.rs/chrono-systemd-time-ng/latest/chrono_systemd_time/
+For more details, please refer to the [`chrono-systemd-time` documentation](https://docs.rs/chrono-systemd-time/latest/chrono_systemd_time/).
 
 ### Regex
 *Dump* supports filtering commands with regex.
@@ -267,6 +270,11 @@ fish:
 set -gx MCFLY_LIGHT TRUE
 ```
 
+powershell:
+```powershell
+$env:MCFLY_LIGHT = "TRUE"
+```
+
 Tip: on macOS you can use the following snippet for color scheme to be configured based on system-wide settings:
 
 bash / zsh:
@@ -275,7 +283,6 @@ if [[ "$(defaults read -g AppleInterfaceStyle 2&>/dev/null)" != "Dark" ]]; then
     export MCFLY_LIGHT=TRUE
 fi
 ```
-
 
 ### VIM Key Scheme
 By default Mcfly uses an `emacs` inspired key scheme. If you would like to switch to the `vim` inspired key scheme, set the environment variable `MCFLY_KEY_SCHEME`.
@@ -288,6 +295,11 @@ export MCFLY_KEY_SCHEME=vim
 fish:
 ```bash
 set -gx MCFLY_KEY_SCHEME vim
+```
+
+powershell:
+```powershell
+$env:MCFLY_KEY_SCHEME="vim"
 ```
 
 ### Fuzzy Searching
@@ -303,6 +315,11 @@ fish:
 set -gx MCFLY_FUZZY 2
 ```
 
+powershell:
+```powershell
+$env:MCFLY_FUZZY=2
+```
+
 ### Results Count
 To change the maximum number of results shown, set `MCFLY_RESULTS` (default: 10).
 
@@ -316,6 +333,11 @@ fish:
 set -gx MCFLY_RESULTS 50
 ```
 
+powershell:
+```powershell
+$env:MCFLY_RESULTS=50
+```
+
 ### Delete without confirmation
 To delete without confirmation, set `MCFLY_DELETE_WITHOUT_CONFIRM` to true.
 
@@ -327,6 +349,11 @@ export MCFLY_DELETE_WITHOUT_CONFIRM=true
 fish:
 ```bash
 set -gx MCFLY_DELETE_WITHOUT_CONFIRM true
+```
+
+powershell:
+```powershell
+$env:MCFLY_DELETE_WITHOUT_CONFIRM="true"
 ```
 
 ### Interface view
@@ -343,6 +370,11 @@ fish:
 set -gx MCFLY_INTERFACE_VIEW BOTTOM
 ```
 
+powershell:
+```powershell
+$env:MCFLY_INTERFACE_VIEW="BOTTOM"
+```
+
 ### Disable menu interface
 To disable the menu interface, set the environment variable `MCFLY_DISABLE_MENU`.
 
@@ -355,6 +387,11 @@ fish:
 ```bash
 set -gx MCFLY_DISABLE_MENU TRUE
 ```
+
+powershell:
+```powershell
+$env:MCFLY_DISABLE_MENU=true
+ ```
 
 ### Results sorting
 To change the sorting of results shown, set `MCFLY_RESULTS_SORT` (default: RANK).
@@ -370,6 +407,11 @@ fish:
 set -gx MCFLY_RESULTS_SORT LAST_RUN
 ```
 
+powershell:
+```powershell
+$env:MCFLY_RESULTS_SORT="LAST_RUN"
+ ```
+
 ### Custom Prompt
 To change the prompt, set `MCFLY_PROMPT` (default: `$`).
 
@@ -382,15 +424,25 @@ fish:
 ```bash
 set -gx MCFLY_PROMPT "❯"
 ```
+
+powershell:
+```powershell
+$env:MCFLY_PROMPT=">"
+ ```
+
 Note that only single-character-prompts are allowed. setting `MCFLY_PROMPT` to `"<str>"` will reset it to the default prompt.
 
 ### Database Location
 
-McFly stores its SQLite database in the standard location for the OS. On OS X, this is in `~/Library/Application Support/McFly` and on Linux it is in `$XDG_DATA_DIR/mcfly/history.db` (default would be `~/.local/share/mcfly/history.db`). For legacy support, if `~/.mcfly/` exists, it is used instead.
+McFly stores its SQLite database in the standard location for the OS. On OS X, this is in `~/Library/Application Support/McFly`, on Linux it is in `$XDG_DATA_DIR/mcfly/history.db` (default would be `~/.local/share/mcfly/history.db`), and on Windows, it is `%LOCALAPPDATA%\McFly\data\history.db`. For legacy support, if `~/.mcfly/` exists, it is used instead.
 
 ### Slow startup
 
 If you have a very large history database and you notice that McFly launches slowly, you can set `MCFLY_HISTORY_LIMIT` to something like 10000 to limit how many records are considered when searching. In this example, McFly would search only the latest 10,000 entries.
+
+### Bash TIOCSTI
+
+Starting with Linux kernel version 6.2, some systems have disabled TIOCSTI (which McFly previously used to write the selected command). McFly works around this issue by using two "dummy" keybindings, which default to `ctrl-x 1` and `ctrl-x 2`. If you are using either of these for another purpose, you can set the `MCFLY_BASH_SEARCH_KEYBINDING` and `MCFLY_BASH_ACCEPT_LINE_KEYBINDING`, respectively, to something you are not using. If you would prefer to use the legacy TIOCSTI behavior, you can enable it by setting the `sysctl` variable `dev.tty.legacy_tiocsti` to `1` on your system and set the `MCFLY_BASH_USE_TIOCSTI` bash variable to `1`.
 
 ## HISTTIMEFORMAT
 
@@ -420,7 +472,7 @@ Contributions and bug fixes are encouraged! However, we may not merge PRs that i
 1. Edit `Cargo.toml` and bump the version.
 1. Edit CHANGELOG.txt
 1. Run `cargo clippy` and `cargo fmt`.
-1. Recompile (`cargo build`).
+1. Recompile (`cargo build`) and test (`cargo test`)
 1. `git add -p`
 1. `git ci -m 'Bumping to vx.x.x'`
 1. `git tag vx.x.x`
@@ -429,3 +481,11 @@ Contributions and bug fixes are encouraged! However, we may not merge PRs that i
 1. Edit the new Release on Github.
 1. `cargo publish`
 1. TBD: update homebrew-core Formula at https://github.com/Homebrew/homebrew-core/blob/master/Formula/m/mcfly.rb
+
+Old:
+1. Edit `pkg/brew/mcfly.rb` and update the version and SHAs. (`shasum -a 256 ...`)
+1. Edit `../homebrew-mcfly/pkg/brew/mcfly.rb` too.
+  1. `cp pkg/brew/mcfly.rb ../homebrew-mcfly/pkg/brew/mcfly.rb`
+  1. Compare with `diff ../homebrew-mcfly/pkg/brew/mcfly.rb ../mcfly/pkg/brew/mcfly.rb ; diff ../homebrew-mcfly/HomebrewFormula/mcfly.rb ../mcfly/HomebrewFormula/mcfly.rb`
+1. `git add -p && git ci -m 'Update homebrew' && git push`
+1. `cd ../homebrew-mcfly && git add -p && git ci -m 'Update homebrew' && git push && cd ../mcfly`

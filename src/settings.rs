@@ -2,8 +2,12 @@ use crate::cli::{Cli, DumpFormat, SortOrder, SubCommand};
 use crate::shell_history;
 use crate::time::parse_timestamp;
 use clap::Parser;
+use config::Source;
+use config::Value;
+use crossterm::style::Color;
 use directories_next::{ProjectDirs, UserDirs};
 use regex::Regex;
+use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -18,6 +22,7 @@ pub enum Mode {
     Move,
     Init,
     Dump,
+    Stats,
 }
 
 #[derive(Debug)]
@@ -59,7 +64,7 @@ pub enum HistoryFormat {
     Bash,
 
     /// zsh format - commands in plain text, with multiline commands on multiple lines.
-    /// McFly does not currently handle joining these lines; they're treated as separate commands.
+    /// `McFly` does not currently handle joining these lines; they're treated as separate commands.
     /// If --zsh-extended-history was given, `extended_history` will be true, and we'll strip the
     /// timestamp from the beginning of each command.
     Zsh { extended_history: bool },
@@ -79,6 +84,38 @@ pub enum HistoryFormat {
 pub struct TimeRange {
     pub since: Option<i64>,
     pub before: Option<i64>,
+}
+
+#[derive(Debug)]
+pub struct Colors {
+    pub menubar_bg: Color,
+    pub menubar_fg: Color,
+    pub darkmode_colors: DarkModeColors,
+    pub lightmode_colors: LightModeColors,
+}
+
+#[derive(Debug)]
+pub struct DarkModeColors {
+    pub prompt: Color,
+    pub timing: Color,
+    pub results_fg: Color,
+    pub results_bg: Color,
+    pub results_hl: Color,
+    pub results_selection_fg: Color,
+    pub results_selection_bg: Color,
+    pub results_selection_hl: Color,
+}
+
+#[derive(Debug)]
+pub struct LightModeColors {
+    pub prompt: Color,
+    pub timing: Color,
+    pub results_fg: Color,
+    pub results_bg: Color,
+    pub results_hl: Color,
+    pub results_selection_fg: Color,
+    pub results_selection_bg: Color,
+    pub results_selection_hl: Color,
 }
 
 #[derive(Debug)]
@@ -114,6 +151,12 @@ pub struct Settings {
     pub sort_order: SortOrder,
     pub pattern: Option<Regex>,
     pub dump_format: DumpFormat,
+    pub colors: Colors,
+    pub stats_min_cmd_length: i16,
+    pub stats_cmds: i16,
+    pub stats_dirs: i16,
+    pub stats_global_commands_to_ignore: i16,
+    pub stats_only_dir: Option<String>,
 }
 
 impl Default for Settings {
@@ -150,6 +193,35 @@ impl Default for Settings {
             sort_order: SortOrder::default(),
             pattern: None,
             dump_format: DumpFormat::default(),
+            colors: Colors {
+                menubar_bg: Color::Blue,
+                menubar_fg: Color::White,
+                darkmode_colors: DarkModeColors {
+                    prompt: Color::White,
+                    timing: Color::Blue,
+                    results_fg: Color::White,
+                    results_bg: Color::Black,
+                    results_hl: Color::Blue,
+                    results_selection_fg: Color::Black,
+                    results_selection_bg: Color::White,
+                    results_selection_hl: Color::DarkGreen,
+                },
+                lightmode_colors: LightModeColors {
+                    prompt: Color::Black,
+                    timing: Color::DarkBlue,
+                    results_fg: Color::Black,
+                    results_bg: Color::White,
+                    results_hl: Color::Blue,
+                    results_selection_fg: Color::White,
+                    results_selection_bg: Color::DarkGrey,
+                    results_selection_hl: Color::Grey,
+                },
+            },
+            stats_min_cmd_length: 0,
+            stats_cmds: 10,
+            stats_dirs: 0,
+            stats_global_commands_to_ignore: 10,
+            stats_only_dir: None,
         }
     }
 }
@@ -200,8 +272,7 @@ impl Settings {
                 .unwrap_or_else(|err| {
                     if !settings.skip_environment_check {
                         panic!(
-                            "McFly error: Please ensure that MCFLY_SESSION_ID contains a random session ID ({})",
-                            err
+                            "McFly error: Please ensure that MCFLY_SESSION_ID contains a random session ID ({err})"
                         )
                     } else {
                         String::new()
@@ -214,10 +285,7 @@ impl Settings {
             {
                 env::var("MCFLY_HISTORY").unwrap_or_else(|err| {
                     if !settings.skip_environment_check {
-                        panic!(
-                            "McFly error: Please ensure that MCFLY_HISTORY is set ({})",
-                            err
-                        )
+                        panic!("McFly error: Please ensure that MCFLY_HISTORY is set ({err})")
                     } else {
                         String::new()
                     }
@@ -227,7 +295,7 @@ impl Settings {
         });
 
         {
-            use crate::cli::HistoryFormat::*;
+            use crate::cli::HistoryFormat::{Bash, Fish, Zsh, ZshExtended};
             settings.history_format = match cli.history_format {
                 Bash => HistoryFormat::Bash,
                 Zsh => HistoryFormat::Zsh {
@@ -256,7 +324,7 @@ impl Settings {
                         SystemTime::now()
                             .duration_since(UNIX_EPOCH)
                             .unwrap_or_else(|err| {
-                                panic!("McFly error: Time went backwards ({})", err)
+                                panic!("McFly error: Time went backwards ({err})")
                             })
                             .as_secs() as i64,
                     )
@@ -366,7 +434,7 @@ impl Settings {
             SubCommand::Init { shell } => {
                 settings.mode = Mode::Init;
 
-                use crate::cli::InitMode::*;
+                use crate::cli::InitMode::{Bash, Fish, Powershell, Zsh};
                 settings.init_mode = match shell {
                     Bash => InitMode::Bash,
                     Zsh => InitMode::Zsh,
@@ -390,6 +458,21 @@ impl Settings {
                 settings.pattern = regex;
                 settings.dump_format = format;
             }
+
+            SubCommand::Stats {
+                min_cmd_length,
+                cmds,
+                dirs,
+                global_commands_to_ignore,
+                only_dir,
+            } => {
+                settings.mode = Mode::Stats;
+                settings.stats_min_cmd_length = min_cmd_length;
+                settings.stats_cmds = cmds;
+                settings.stats_dirs = dirs;
+                settings.stats_global_commands_to_ignore = global_commands_to_ignore;
+                settings.stats_only_dir = only_dir;
+            }
         }
 
         settings.lightmode = is_env_var_truthy("MCFLY_LIGHT");
@@ -412,7 +495,169 @@ impl Settings {
         settings
     }
 
+    pub fn load_config(&mut self) {
+        let config_path = Settings::mcfly_config_path();
+        if config_path.exists() {
+            let config = config::File::from(config_path);
+            if let Ok(config_map) = config.collect() {
+                self.merge_config(config_map);
+            }
+        };
+    }
+
+    pub fn merge_config(&mut self, config_map: HashMap<String, Value>) {
+        let color_config = config_map.get("colors");
+
+        let menubar_config = color_config
+            .and_then(|v| v.clone().into_table().ok())
+            .and_then(|v| v.get("menubar").and_then(|v| v.clone().into_table().ok()));
+
+        if let Some(menubar_config) = menubar_config {
+            if let Some(menubar_bg) = menubar_config
+                .get("bg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.menubar_bg = menubar_bg;
+            }
+            if let Some(menubar_fg) = menubar_config
+                .get("fg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.menubar_fg = menubar_fg;
+            }
+        }
+
+        let darkmode_config = color_config
+            .and_then(|v| v.clone().into_table().ok())
+            .and_then(|v| v.get("darkmode").and_then(|v| v.clone().into_table().ok()));
+
+        if let Some(darkmode_config) = darkmode_config {
+            if let Some(prompt) = darkmode_config
+                .get("prompt")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.prompt = prompt;
+            }
+            if let Some(timing) = darkmode_config
+                .get("timing")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.timing = timing;
+            }
+            if let Some(results_fg) = darkmode_config
+                .get("results_fg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_fg = results_fg;
+            }
+            if let Some(results_bg) = darkmode_config
+                .get("results_bg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_bg = results_bg;
+            }
+            if let Some(results_hl) = darkmode_config
+                .get("results_hl")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_hl = results_hl;
+            }
+            if let Some(results_selection_fg) = darkmode_config
+                .get("results_selection_fg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_selection_fg = results_selection_fg;
+            }
+            if let Some(results_selection_bg) = darkmode_config
+                .get("results_selection_bg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_selection_bg = results_selection_bg;
+            }
+            if let Some(results_selection_hl) = darkmode_config
+                .get("results_selection_hl")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.darkmode_colors.results_selection_hl = results_selection_hl;
+            }
+        }
+
+        let lightmode_config = color_config
+            .and_then(|v| v.clone().into_table().ok())
+            .and_then(|v| v.get("lightmode").and_then(|v| v.clone().into_table().ok()));
+
+        if let Some(lightmode_config) = lightmode_config {
+            if let Some(prompt) = lightmode_config
+                .get("prompt")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.prompt = prompt;
+            }
+            if let Some(timing) = lightmode_config
+                .get("timing")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.timing = timing;
+            }
+            if let Some(results_fg) = lightmode_config
+                .get("results_fg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_fg = results_fg;
+            }
+            if let Some(results_bg) = lightmode_config
+                .get("results_bg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_bg = results_bg;
+            }
+            if let Some(results_hl) = lightmode_config
+                .get("results_hl")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_hl = results_hl;
+            }
+            if let Some(results_selection_fg) = lightmode_config
+                .get("results_selection_fg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_selection_fg = results_selection_fg;
+            }
+            if let Some(results_selection_bg) = lightmode_config
+                .get("results_selection_bg")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_selection_bg = results_selection_bg;
+            }
+            if let Some(results_selection_hl) = lightmode_config
+                .get("results_selection_hl")
+                .and_then(|v| v.clone().into_string().ok())
+                .and_then(|v| Color::from_str(v.as_str()).ok())
+            {
+                self.colors.lightmode_colors.results_selection_hl = results_selection_hl;
+            }
+        }
+    }
+
     // Use ~/.mcfly only if it already exists, otherwise create 'mcfly' folder in XDG_CACHE_DIR
+    #[must_use]
     pub fn mcfly_training_cache_path() -> PathBuf {
         let cache_dir = Settings::mcfly_xdg_dir().cache_dir().to_path_buf();
 
@@ -420,10 +665,23 @@ impl Settings {
     }
 
     // Use ~/.mcfly only if it already exists, otherwise create 'mcfly' folder in XDG_DATA_DIR
+    #[must_use]
     pub fn mcfly_db_path() -> PathBuf {
         let data_dir = Settings::mcfly_xdg_dir().data_dir().to_path_buf();
+        if data_dir.exists() {
+            return Settings::mcfly_base_path(data_dir).join(PathBuf::from("history.db"));
+        };
 
-        Settings::mcfly_base_path(data_dir).join(PathBuf::from("history.db"))
+        let data_local_dir = Settings::mcfly_xdg_dir().data_local_dir().to_path_buf();
+        Settings::mcfly_base_path(data_local_dir).join(PathBuf::from("history.db"))
+    }
+
+    // Use ~/.mcfly only if it already exists, otherwise create 'mcfly' folder in XDG_DATA_DIR
+    #[must_use]
+    pub fn mcfly_config_path() -> PathBuf {
+        let data_dir = Settings::mcfly_xdg_dir().data_dir().to_path_buf();
+
+        Settings::mcfly_base_path(data_dir).join(PathBuf::from("config.toml"))
     }
 
     fn mcfly_xdg_dir() -> ProjectDirs {
@@ -445,13 +703,10 @@ impl Settings {
 }
 
 #[cfg(not(windows))]
+#[must_use]
 pub fn pwd() -> String {
-    env::var("PWD").unwrap_or_else(|err| {
-        panic!(
-            "McFly error: Unable to determine current directory ({})",
-            err
-        )
-    })
+    env::var("PWD")
+        .unwrap_or_else(|err| panic!("McFly error: Unable to determine current directory ({err})"))
 }
 
 #[cfg(windows)]
@@ -484,6 +739,7 @@ fn is_env_var_truthy(name: &str) -> bool {
 impl TimeRange {
     /// Determine the range is full (`..`)
     #[inline]
+    #[must_use]
     pub fn is_full(&self) -> bool {
         self.since.is_none() && self.before.is_none()
     }
