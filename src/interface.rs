@@ -217,14 +217,27 @@ impl<'a> Interface<'a> {
         let result_top_index = self.result_top_index();
         queue!(screen, cursor::Hide, cursor::MoveTo(1, result_top_index)).unwrap();
 
-        let (width, _height): (u16, u16) = terminal::size().unwrap();
+        let (width, height): (u16, u16) = terminal::size().unwrap();
+        let result_height = (height - RESULTS_TOP_INDEX) as usize
+            + if self.is_screen_view_bottom() { 1 } else { 0 };
 
         if !self.matches.is_empty() && self.selection > self.matches.len() - 1 {
             self.selection = self.matches.len() - 1;
         }
 
-        let mut index: usize = 0;
-        for command in &self.matches {
+        let mut index = 0;
+        let in_page = self.selection < result_height;
+
+        let view_range = if in_page {
+            let len = result_height.min(self.matches.len());
+            &self.matches[..len]
+        } else {
+            let offset = self.selection - result_height + 1;
+            let len = (offset + result_height).min(self.matches.len());
+            &self.matches[offset..len]
+        };
+
+        for command in view_range {
             let mut fg = if self.settings.lightmode {
                 self.settings.colors.lightmode_colors.results_fg
             } else {
@@ -239,7 +252,7 @@ impl<'a> Interface<'a> {
 
             let mut bg = Color::Reset;
 
-            if index == self.selection {
+            if index == self.selection.min(result_height - 1) {
                 if self.settings.lightmode {
                     fg = self.settings.colors.lightmode_colors.results_selection_fg;
                     bg = self.settings.colors.lightmode_colors.results_selection_bg;
@@ -259,12 +272,7 @@ impl<'a> Interface<'a> {
                 SetBackgroundColor(bg),
                 SetForegroundColor(fg),
                 Print(Interface::truncate_for_display(
-                    command,
-                    &self.input.command,
-                    width,
-                    highlight,
-                    fg,
-                    self.debug
+                    command, width, highlight, fg, self.debug
                 ))
             )
             .unwrap();
@@ -329,9 +337,10 @@ impl<'a> Interface<'a> {
             }
             index += 1;
         }
+
         // Since we only clear by line instead of clearing the screen each update,
         //  we need to clear all the lines that may have previously had a command
-        for i in index..(self.settings.results as usize) {
+        for i in index..result_height {
             let command_line_index = self.command_line_index(i as i16);
             queue!(
                 screen,
@@ -977,13 +986,11 @@ impl<'a> Interface<'a> {
 
     fn truncate_for_display(
         command: &Command,
-        search: &str,
         width: u16,
         highlight_color: Color,
         base_color: Color,
         debug: bool,
     ) -> String {
-        let mut prev: usize = 0;
         let debug_space = if debug { 90 } else { 0 };
         let max_grapheme_length = if width > debug_space {
             width - debug_space - 9
@@ -992,21 +999,20 @@ impl<'a> Interface<'a> {
         };
         let mut out = FixedLengthGraphemeString::empty(max_grapheme_length);
 
-        if !search.is_empty() {
-            for (start, end) in &command.match_bounds {
-                if prev != *start {
-                    out.push_grapheme_str(&command.cmd[prev..*start]);
+        let mut match_indices = command.match_indices.iter().peekable();
+
+        for (i, c) in command.cmd.char_indices() {
+            match match_indices.peek() {
+                Some(&&j) if i == j => {
+                    let _ = match_indices.next();
+                    execute!(out, SetForegroundColor(highlight_color)).unwrap();
+                    out.push_grapheme_str(c);
                 }
-
-                execute!(out, SetForegroundColor(highlight_color)).unwrap();
-                out.push_grapheme_str(&command.cmd[*start..*end]);
-                execute!(out, SetForegroundColor(base_color)).unwrap();
-                prev = *end;
+                _ => {
+                    execute!(out, SetForegroundColor(base_color)).unwrap();
+                    out.push_grapheme_str(c);
+                }
             }
-        }
-
-        if prev != command.cmd.len() {
-            out.push_grapheme_str(&command.cmd[prev..]);
         }
 
         if debug {

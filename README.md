@@ -24,6 +24,7 @@ TL;DR: an upgraded `ctrl-r` where history results make sense for what you're wor
 * Designed to be extensible for other shells in the future.
 * Written in Rust, so it's fast and safe.
 * You can type `%` to match any number of characters when searching.
+* Supports Zsh, Bash (version 3+), and PowerShell (version 7+)
 
 ## Prioritization
 
@@ -321,7 +322,7 @@ $env:MCFLY_FUZZY=2
 ```
 
 ### Results Count
-To change the maximum number of results shown, set `MCFLY_RESULTS` (default: 10).
+To change the maximum number of results shown, set `MCFLY_RESULTS` (default: 30).
 
 bash / zsh:
 ```bash
