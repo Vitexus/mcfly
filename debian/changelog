@@ -1,4 +1,10 @@
-mcfly (0.6.1) UNRELEASED; urgency=low
+mcfly (0.9.3) UNRELEASED; urgency=medium
+
+  * Display more results by default
+
+ -- vitex <info@vitexsoftware.cz>  Wed, 21 May 2025 18:25:34 +0200
+
+mcfly (0.6.1) unstable; urgency=low
 
   [ CyberVitexus ]
   * v0.5.7 update
@@ -6,7 +12,7 @@ mcfly (0.6.1) UNRELEASED; urgency=low
   [ vitex ]
   * v0.5.10 release
 
- -- vitex <info@vitexsoftware.cz>  Sun, 28 Nov 2021 08:48:14 +0100
+ -- vitex <info@vitexsoftware.cz>  Wed, 21 May 2025 18:25:07 +0200
 
 mcfly (0.5.2) UNRELEASED; urgency=low
 
