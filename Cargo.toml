@@ -1,8 +1,8 @@
 [package]
 name = "mcfly"
-version = "0.9.3"
+version = "0.9.4"
 authors = ["Andrew Cantino <cantino@users.noreply.github.com>"]
-edition = "2021"
+edition = "2024"
 description = "McFly replaces your default ctrl-r shell history search with an intelligent search engine that takes into account your working directory and the context of recently executed commands. McFly's suggestions are prioritized in real time with a small neural network."
 license = "MIT"
 repository = "https://github.com/cantino/mcfly"
@@ -16,7 +16,7 @@ lto = true
 debug = true
 
 [dependencies]
-config = { version = "0.15.0", default-features = false, features = ["toml"] }
+config = { version = "0.15", default-features = false, features = ["toml"] }
 chrono = "0.4"
 chrono-systemd-time = "0.3"
 csv = "1"
@@ -32,7 +32,7 @@ shellexpand = "3"
 unicode-segmentation = "1.11"
 
 [dependencies.rusqlite]
-version = "0.33"
+version = "0.38"
 features = ["functions", "unlock_notify"]
 
 [dependencies.crossterm]
