@@ -884,19 +884,20 @@ impl History {
                     let simplified_command = SimplifiedCommand::new(&command.command, true);
                     if !command.command.is_empty()
                         && !simplified_command.result.is_empty()
-                        && let Err(e) = statement.execute(named_params! {
+                    {
+                        if let Err(e) = statement.execute(named_params! {
                             ":cmd": &command.command,
                             ":cmd_tpl": &simplified_command.result.clone(),
                             ":session_id": &"IMPORTED",
                             ":when_run": &command.when,
                             ":exit_code": &0,
                             ":selected": &0,
-                        })
-                    {
-                        println!(
-                            "A single history line could not be saved due to '{}' (command was '{}'), but other inserts should be fine.",
-                            e, &command.command
-                        );
+                        }) {
+                            println!(
+                                "A single history line could not be saved due to '{}' (command was '{}'), but other inserts should be fine.",
+                                e, &command.command
+                            );
+                        }
                     }
                 }
             }
