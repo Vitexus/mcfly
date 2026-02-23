@@ -1,8 +1,14 @@
-mcfly (0.9.3) UNRELEASED; urgency=medium
+mcfly (0.9.4) UNRELEASED; urgency=medium
+
+  * v0.9.4 backport
+
+ -- vitex <info@vitexsoftware.cz>  Mon, 23 Feb 2026 02:34:03 +0100
+
+mcfly (0.9.3) unstable; urgency=medium
 
   * Display more results by default
 
- -- vitex <info@vitexsoftware.cz>  Wed, 21 May 2025 18:25:34 +0200
+ -- vitex <info@vitexsoftware.cz>  Mon, 23 Feb 2026 02:33:52 +0100
 
 mcfly (0.6.1) unstable; urgency=low
 
