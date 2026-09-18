@@ -116,10 +116,11 @@ fn is_ignored_command(command: &str, commands_to_ignore: Option<&Regex>) -> bool
     }
 
     // Ignore commands matching the user-supplied pattern.
-    if let Some(pattern) = commands_to_ignore
-        && pattern.is_match(command)
-    {
-        return true;
+    // Nested if: let-chains need rustc >= 1.88; Debian trixie ships 1.85.
+    if let Some(pattern) = commands_to_ignore {
+        if pattern.is_match(command) {
+            return true;
+        }
     }
 
     false

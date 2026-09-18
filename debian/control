@@ -2,7 +2,7 @@ Source: mcfly
 Section: devel
 Priority: optional
 Maintainer: CyberVitexus <info@vitexsoftware.cz>
-Build-Depends: debhelper (>=11~),rustc (>=1.40),cargo,dh-cargo
+Build-Depends: debhelper (>=11~),rustc (>=1.85),cargo,dh-cargo
 Standards-Version: 4.1.4
 Homepage: https://github.com/cantino/mcfly
 

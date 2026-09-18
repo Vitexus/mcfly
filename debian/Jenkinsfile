@@ -5,7 +5,7 @@
 String[] distributions = [
 //'debian:bookworm', 
 'debian:trixie', 
-'debian:forky', 
+//'debian:forky', // temporarily disabled until deps available
 //'ubuntu:jammy', 
 //'ubuntu:noble'
 ]
